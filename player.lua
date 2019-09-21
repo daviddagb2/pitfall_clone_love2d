@@ -7,20 +7,43 @@ activeFrame = 0
 currentFrame = 1
 direction = 2 -- 1:lef, 2:right, 3:jump, 4:climb, 5:idle
 
-playerSpeed = 0.5 -- de 0 a 1
-playerAnimSpeed = 100 --speed original 500
-
-
+local playerSpeed = 0.1 -- de 0 a 1
+local playerAnimSpeed = 340 --speed original 500
 local playerWidth = 21
 local playerHeight = 21
+local player = {}  -- Add this below the platform variable
 
+mirrowed = 1
 
-playerPosX = 2
-playerPosY = 2
+local text
 
 function playerLoad()
 
-	imageFile = love.graphics.newImage("gfx/player/spritesheetplayer.png")
+	sfxjump = love.audio.newSource("audio/jump.mp3", "static")
+	sfxjump:setVolume(1)
+
+	-- DEBUG TEXT
+	love.graphics.setNewFont(12)
+	text = "Nothing yet"
+
+	-- PLAYER VARIABLES
+	-- This is the coordinates where the player character will be rendered.
+	player.x = love.graphics.getWidth() / 2   -- This sets the player at the middle of the screen based on the width of the game window. 
+	player.y = (love.graphics.getHeight() / 2 ) + 30  -- This sets the player at the middle of the screen based on the height of the game window. 
+	player.speed = 110    -- This is the player's speed. This value can be change based on your liking.
+	player.ismoving = false --saber si el player se esta moviendo
+
+	-- This calls the file named "purple.png" and puts it in the variable called player.img.
+	player.img = love.graphics.newImage('gfx/player/idle.png')
+	player.ground = player.y     -- This makes the character land on the plaform.
+
+	player.y_velocity = 0        -- Whenever the character hasn't jumped yet, the Y-Axis velocity is always at 0.
+	player.jump_height = -130    -- Whenever the character jumps, he can reach this height.
+	player.gravity = -500        -- Whenever the character falls, he will descend at this rate.
+
+
+
+	imageFile = love.graphics.newImage("gfx/player/spritesheetplayer.png", love.image_optimize)
 
     --Sprites idle
     frames[1] = love.graphics.newQuad(0,0,21,21,imageFile:getDimensions())
@@ -50,37 +73,63 @@ function playerLoad()
 end
 
 
+function playerUpdate(dt)
+	if love.keyboard.isDown('d') then
+		if player.x < (love.graphics.getWidth() - player.img:getWidth()) then
+			player.x = player.x + (player.speed * dt)
+			direction = 1
+			player.ismoving = true
+		else
+			direction = 5
+			player.ismoving = false
+		end
+		mirrowed = 1
+	elseif love.keyboard.isDown('a') then
+		if player.x > player.img:getWidth() then 
+			player.x = player.x - (player.speed * dt)
+			direction = 2
+			player.ismoving = true
+		else
+			direction = 5
+			player.ismoving = false
+		end
+		mirrowed = -1
+	else
+		player.ismoving = false
+	end
+ 
+	if love.keyboard.isDown('space') then
+		if player.y_velocity == 0 then
+			player.y_velocity = player.jump_height
+			sfxjump:play()
+		end
+	end
+ 
+	--if player.x_v
+	if not player.ismoving then 
+		direction = 5
+	end
 
-function playerPressLeft()
-	direction = 1 -- 1:lef, 2:right, 3:jump, 4:climb, 5:idle
-	if not (direction == 1) then
-		currentFrame = 2
+	if player.y_velocity ~= 0 then
+		player.y = player.y + player.y_velocity * dt
+		player.y_velocity = player.y_velocity - player.gravity * dt
 	end
-	
-	playerPosX = playerPosX - playerSpeed
-	if(playerPosX <= 0) then
-		playerPosX = 0
+ 
+	if player.y > player.ground then
+		player.y_velocity = 0
+    	player.y = player.ground
+    	direction = 5
 	end
-	
-end
 
-
-function playerPressRight()
-	direction = 2 -- 1:lef, 2:right, 3:jump, 4:climb, 5:idle
-	if not (direction == 2) then
-		currentFrame = 2
-	end
-	
-	playerPosX = playerPosX + playerSpeed
-	if(playerPosX >= love.graphics.getWidth() - playerWidth) then
-		playerPosX = love.graphics.getWidth() - playerWidth
-	end
-	
 end
 
 
 
 function drawPlayer()
+	-- PLAYER DRAW
+	-- This draws the player.
+	--love.graphics.draw(player.img, player.x, player.y, 0, 1, 1, 0, 32)
+
 	if(elapsedTime > 0.3) then
 
 		if (direction == 1) then
@@ -104,19 +153,36 @@ function drawPlayer()
 				currentFrame = 2
 			end
 			--..............................
+
+		elseif (direction == 3) then
+
+		elseif (direction == 4) then
+
+		elseif (direction == 5) then
+			currentFrame = 1
 		end
 
 		activeFrame = frames[currentFrame]
 		elapsedTime = 0
 	end
 	
+
+
+	--love.graphics.draw(player.img, player.x, player.y, 0, 1, 1, 0, 32)
 	love.graphics.draw(imageFile, --texture
 		activeFrame, --quad
-        playerPosX,  --x
-        playerPosY,  --y
-        0, --r orientation in radians
-        1,
-        1)
+        player.x,  --x
+        player.y,  --y
+        0, --rotation 
+        mirrowed, --mirrowed
+         1.5, 0, 21)
+	if player.ismoving then
+		--love.graphics.print("player.ismoving." , 0, 10)
+	else
+		--love.graphics.print("player stoped." , 0, 10)
+	end
+
+	
 end
 
 

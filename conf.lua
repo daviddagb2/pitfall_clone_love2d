@@ -1,7 +1,7 @@
 function love.conf(t)
-    t.title = "Pitfall remix"		    -- The title of the window the game is in (string)
-    t.window.width = 384			    -- The window width (number)
-    t.window.height = 320			    -- The window height (number)
+    t.title = "Pitfall remake"		-- The title of the window the game is in (string)
+    t.window.width = 384 ---384	  192		    -- The window width (number)
+    t.window.height = 320 -- 320	 260		    -- The window height (number)
     t.window.fullscreen = false		-- Enable fullscreen (boolean)
     t.window.vsync = true			    -- Enable vertical sync (boolean)
     t.console = true

@@ -1,5 +1,7 @@
 -- Config for player movements
 -- Variables
+player = {}  -- This define the player object
+
 imageFile  = nil
 frames = {}
 
@@ -9,22 +11,23 @@ direction = 2 -- 1:lef, 2:right, 3:jump, 4:climb, 5:idle
 
 local playerSpeed = 0.1 -- de 0 a 1
 local playerAnimSpeed = 340 --speed original 500
-local playerWidth = 21
-local playerHeight = 21
-local player = {}  -- Add this below the platform variable
-
-mirrowed = 1
-
-local text
+local mirrowed = 1
+local collition = false
+local isdead = false
 
 function playerLoad()
 
 	sfxjump = love.audio.newSource("audio/jump.mp3", "static")
 	sfxjump:setVolume(1)
 
+	sfxdeath = love.audio.newSource("audio/death.mp3", "static")
+	sfxdeath:setVolume(1)
+
 	-- DEBUG TEXT
 	love.graphics.setNewFont(12)
-	text = "Nothing yet"
+
+	player.width = 21
+	player.height = 21
 
 	-- PLAYER VARIABLES
 	-- This is the coordinates where the player character will be rendered.
@@ -40,7 +43,6 @@ function playerLoad()
 	player.y_velocity = 0        -- Whenever the character hasn't jumped yet, the Y-Axis velocity is always at 0.
 	player.jump_height = -130    -- Whenever the character jumps, he can reach this height.
 	player.gravity = -500        -- Whenever the character falls, he will descend at this rate.
-
 
 
 	imageFile = love.graphics.newImage("gfx/player/spritesheetplayer.png", love.image_optimize)
@@ -65,7 +67,6 @@ function playerLoad()
 
 	--Sprites vine
 	frames[11] = love.graphics.newQuad(210,0,21,21,imageFile:getDimensions())
-
 
 	activeFrame = frames[currentFrame]
     print(select(4,activeFrame:getViewport())/2)
@@ -121,6 +122,13 @@ function playerUpdate(dt)
     	direction = 5
 	end
 
+
+	if CheckCollision(player.x, player.y, player.width, player.height, 
+					  treasure.x, treasure.y, 21, 21) then
+		collition = true
+		getTreasure()
+	end
+
 end
 
 
@@ -129,8 +137,14 @@ function drawPlayer()
 	-- PLAYER DRAW
 	-- This draws the player.
 	--love.graphics.draw(player.img, player.x, player.y, 0, 1, 1, 0, 32)
+	if collition then
+		--love.graphics.print("Colisiono con el tesoro", 25, 50)
+	else
 
-	if(elapsedTime > 0.3) then
+	end
+
+	if not isdead then 
+		if(elapsedTime > 0.3) then
 
 		if (direction == 1) then
 			--Move frames left
@@ -166,23 +180,24 @@ function drawPlayer()
 		elapsedTime = 0
 	end
 	
+		--love.graphics.draw(player.img, player.x, player.y, 0, 1, 1, 0, 32)
+		love.graphics.draw(imageFile, --texture
+			activeFrame, --quad
+	        player.x,  --x
+	        player.y,  --y
+	        0, --rotation 
+	        mirrowed, --mirrowed
+	         1.5, 0, 21)
 
+		if player.ismoving then
+			--love.graphics.print("player.ismoving." , 0, 10)
+		else
+			--love.graphics.print("player stoped." , 0, 10)
+		end
 
-	--love.graphics.draw(player.img, player.x, player.y, 0, 1, 1, 0, 32)
-	love.graphics.draw(imageFile, --texture
-		activeFrame, --quad
-        player.x,  --x
-        player.y,  --y
-        0, --rotation 
-        mirrowed, --mirrowed
-         1.5, 0, 21)
-	if player.ismoving then
-		--love.graphics.print("player.ismoving." , 0, 10)
-	else
-		--love.graphics.print("player stoped." , 0, 10)
-	end
+	end --is not dead
 
-	
+		
 end
 
 
